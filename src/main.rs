@@ -158,7 +158,6 @@ impl Player {
             RGBA::from_f32(1.0, 1.0, 1.0, 1.0),
             frame % 4,
         );
-        println!("{}", frame);
         ctx.set_active_console(0);
         // use to display actual position
         // ctx.set(0, self.y, YELLOW, BLACK, to_cp437('@'));
