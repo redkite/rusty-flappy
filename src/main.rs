@@ -97,6 +97,9 @@ impl State {
     }
 
     fn dead(&mut self, ctx: &mut BTerm) {
+        ctx.set_active_console(1);
+        ctx.cls();
+        ctx.set_active_console(0);
         ctx.cls();
         ctx.print_centered(5, "You are dead!");
         ctx.print_centered(6, &format!("You earned {} points", self.score as i32));
