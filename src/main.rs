@@ -203,14 +203,39 @@ impl Obstacle {
     fn render(&mut self, ctx: &mut BTerm, player_x: i32) {
         let screen_x = self.x - player_x;
         let half_size = self.size / 2;
+        ctx.set_active_console(0);
 
+        ctx.set_active_console(1);
         for y in 0..self.gap_y - half_size {
-            ctx.set(screen_x, y, RED, BLACK, to_cp437('|'));
+            ctx.add_sprite(
+                Rect::with_size(
+                    screen_x * SPRITE_COORD_TO_CONSOLE_COORD,
+                    y * SPRITE_COORD_TO_CONSOLE_COORD,
+                    SPRITE_COORD_TO_CONSOLE_COORD,
+                    SPRITE_COORD_TO_CONSOLE_COORD,
+                ),
+                400 - y,
+                RGBA::from_f32(1.0, 1.0, 1.0, 1.0),
+                4,
+            );
+            //ctx.set(screen_x, y, RED, BLACK, to_cp437('|'));
         }
 
         for y in self.gap_y + half_size..SCREEN_HEIGHT {
-            ctx.set(screen_x, y, RED, BLACK, to_cp437('|'));
+            ctx.add_sprite(
+                Rect::with_size(
+                    screen_x * SPRITE_COORD_TO_CONSOLE_COORD,
+                    y * SPRITE_COORD_TO_CONSOLE_COORD,
+                    SPRITE_COORD_TO_CONSOLE_COORD,
+                    SPRITE_COORD_TO_CONSOLE_COORD,
+                ),
+                400 - y,
+                RGBA::from_f32(1.0, 1.0, 1.0, 1.0),
+                4,
+            );
+            //ctx.set(screen_x, y, RED, BLACK, to_cp437('|'));
         }
+        ctx.set_active_console(0);
     }
 
     fn hit_obstacle(&self, player: &Player) -> bool {
@@ -229,11 +254,12 @@ fn main() -> BError {
         .with_title("Flappy Dragon")
         .with_sprite_console(640, 400, 0)
         .with_sprite_sheet(
-            SpriteSheet::new("resources/dragon.png")
+            SpriteSheet::new("resources/all.png")
                 .add_sprite(Rect::with_size(0, 0, 939, 678))
                 .add_sprite(Rect::with_size(939, 0, 939, 678))
                 .add_sprite(Rect::with_size(1878, 0, 939, 678))
-                .add_sprite(Rect::with_size(2817, 0, 939, 678)),
+                .add_sprite(Rect::with_size(2817, 0, 939, 678))
+                .add_sprite(Rect::with_size(3756, 0, 256, 256)),
         )
         .build()?;
 
