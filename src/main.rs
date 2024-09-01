@@ -4,6 +4,7 @@ use std::cmp;
 const SCREEN_WIDTH: i32 = 80;
 const SCREEN_HEIGHT: i32 = 50;
 const FRAME_DURATION: f32 = 75.0;
+const SCORE_PER_OBSTACLE: f32 = 0.05;
 
 struct State {
     player: Player,
@@ -42,7 +43,7 @@ impl State {
     fn restart(&mut self) {
         self.player = Player::new(5, 25);
         self.frame_time = 0.0;
-        self.obstacles = vec![Obstacle::new(SCREEN_WIDTH, SCREEN_WIDTH / 2, 0.0)];
+        self.obstacles = vec![Obstacle::new(SCREEN_WIDTH, SCREEN_HEIGHT / 2, 0.0)];
         self.mode = GameMode::Playing;
         self.score = 0.0;
     }
@@ -75,7 +76,7 @@ impl State {
         self.player.render(ctx);
 
         if self.player.x > self.obstacles[0].x {
-            self.score += 0.01;
+            self.score += SCORE_PER_OBSTACLE;
             self.obstacles.remove(0);
         }
 
@@ -87,14 +88,14 @@ impl State {
             }
         }
 
-        ctx.print(0, 0, "Press SPACE to flap.");
-        ctx.print(0, 1, &format!("Score: {}", self.score));
+        ctx.print_color(0, 0, WHITE, BLACK, "Press SPACE to flap.");
+        ctx.print_color(0, 1, WHITE, BLACK, &format!("Score: {}", self.score as i32));
     }
 
     fn dead(&mut self, ctx: &mut BTerm) {
         ctx.cls();
         ctx.print_centered(5, "You are dead!");
-        ctx.print_centered(6, &format!("You earned {} points", self.score));
+        ctx.print_centered(6, &format!("You earned {} points", self.score as i32));
         ctx.print_centered(8, "(P)lay Game");
         ctx.print_centered(9, "(Q)uit Game");
 
