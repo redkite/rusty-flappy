@@ -5,6 +5,7 @@ const SCREEN_WIDTH: i32 = 80;
 const SCREEN_HEIGHT: i32 = 50;
 const FRAME_DURATION: f32 = 75.0;
 const SCORE_PER_OBSTACLE: f32 = 0.05;
+const SPRITE_COORD_TO_CONSOLE_COORD: i32 = 8;
 
 struct State {
     player: Player,
@@ -144,12 +145,19 @@ impl Player {
         ctx.set_active_console(1);
         ctx.cls();
         ctx.add_sprite(
-            Rect::with_size(0, self.y * 8, 8, 8),
+            Rect::with_size(
+                0,
+                (self.y * SPRITE_COORD_TO_CONSOLE_COORD) - SPRITE_COORD_TO_CONSOLE_COORD,
+                32,
+                32,
+            ),
             400 - self.y,
             RGBA::from_f32(1.0, 1.0, 1.0, 1.0),
             0,
         );
         ctx.set_active_console(0);
+        // use to display actual position
+        // ctx.set(0, self.y, YELLOW, BLACK, to_cp437('@'));
     }
 
     fn gravity_and_move(&mut self) {
@@ -202,7 +210,7 @@ impl Obstacle {
     fn hit_obstacle(&self, player: &Player) -> bool {
         let half_size = self.size / 2;
 
-        let does_x_match = player.x == self.x;
+        let does_x_match = player.x == self.x - SPRITE_COORD_TO_CONSOLE_COORD / 2;
         let player_above_gap = player.y < self.gap_y - half_size;
         let player_below_gap = player.y > self.gap_y + half_size;
 
@@ -215,7 +223,7 @@ fn main() -> BError {
         .with_title("Flappy Dragon")
         .with_sprite_console(640, 400, 0)
         .with_sprite_sheet(
-            SpriteSheet::new("resources/dragon-1.png").add_sprite(Rect::with_size(0, 0, 939, 678)),
+            SpriteSheet::new("resources/dragon-1.png").add_sprite(Rect::with_size(0, 0, 939, 678)), // dragon
         )
         .build()?;
 
