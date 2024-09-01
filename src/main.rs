@@ -10,6 +10,7 @@ const SPRITE_COORD_TO_CONSOLE_COORD: i32 = 8;
 struct State {
     player: Player,
     frame_time: f32,
+    frame: usize,
     obstacles: Vec<Obstacle>,
     mode: GameMode,
     score: f32,
@@ -20,6 +21,7 @@ impl State {
         State {
             player: Player::new(5, 25),
             frame_time: 0.0,
+            frame: 0,
             obstacles: vec![Obstacle::new(SCREEN_WIDTH, SCREEN_HEIGHT / 2, 0.0)],
             mode: GameMode::Menu,
             score: 0.0,
@@ -54,6 +56,7 @@ impl State {
         self.frame_time += ctx.frame_time_ms;
         if self.frame_time > FRAME_DURATION {
             self.frame_time = 0.0;
+            self.frame = self.frame.wrapping_add(1);
 
             self.player.gravity_and_move();
             let last_gap_y = self.obstacles.last().unwrap().gap_y;
@@ -74,7 +77,7 @@ impl State {
         if let Some(VirtualKeyCode::Space) = ctx.key {
             self.player.flap();
         }
-        self.player.render(ctx);
+        self.player.render(ctx, self.frame);
 
         if self.player.x > self.obstacles[0].x {
             self.score += SCORE_PER_OBSTACLE;
@@ -141,7 +144,7 @@ impl Player {
         }
     }
 
-    fn render(&mut self, ctx: &mut BTerm) {
+    fn render(&mut self, ctx: &mut BTerm, frame: usize) {
         ctx.set_active_console(1);
         ctx.cls();
         ctx.add_sprite(
@@ -153,8 +156,9 @@ impl Player {
             ),
             400 - self.y,
             RGBA::from_f32(1.0, 1.0, 1.0, 1.0),
-            0,
+            frame % 4,
         );
+        println!("{}", frame);
         ctx.set_active_console(0);
         // use to display actual position
         // ctx.set(0, self.y, YELLOW, BLACK, to_cp437('@'));
@@ -223,7 +227,11 @@ fn main() -> BError {
         .with_title("Flappy Dragon")
         .with_sprite_console(640, 400, 0)
         .with_sprite_sheet(
-            SpriteSheet::new("resources/dragon-1.png").add_sprite(Rect::with_size(0, 0, 939, 678)), // dragon
+            SpriteSheet::new("resources/dragon.png")
+                .add_sprite(Rect::with_size(0, 0, 939, 678))
+                .add_sprite(Rect::with_size(939, 0, 939, 678))
+                .add_sprite(Rect::with_size(1878, 0, 939, 678))
+                .add_sprite(Rect::with_size(2817, 0, 939, 678)),
         )
         .build()?;
 
