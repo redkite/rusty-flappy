@@ -1,4 +1,5 @@
 use bracket_lib::prelude::*;
+use std::cmp;
 
 const SCREEN_WIDTH: i32 = 80;
 const SCREEN_HEIGHT: i32 = 50;
@@ -7,9 +8,9 @@ const FRAME_DURATION: f32 = 75.0;
 struct State {
     player: Player,
     frame_time: f32,
-    obstacle: Obstacle,
+    obstacles: Vec<Obstacle>,
     mode: GameMode,
-    score: i32,
+    score: f32,
 }
 
 impl State {
@@ -17,9 +18,9 @@ impl State {
         State {
             player: Player::new(5, 25),
             frame_time: 0.0,
-            obstacle: Obstacle::new(SCREEN_WIDTH, 0),
+            obstacles: vec![Obstacle::new(SCREEN_WIDTH, SCREEN_HEIGHT / 2, 0.0)],
             mode: GameMode::Menu,
-            score: 0,
+            score: 0.0,
         }
     }
 
@@ -41,9 +42,9 @@ impl State {
     fn restart(&mut self) {
         self.player = Player::new(5, 25);
         self.frame_time = 0.0;
-        self.obstacle = Obstacle::new(SCREEN_WIDTH, 0);
+        self.obstacles = vec![Obstacle::new(SCREEN_WIDTH, SCREEN_WIDTH / 2, 0.0)];
         self.mode = GameMode::Playing;
-        self.score = 0;
+        self.score = 0.0;
     }
 
     fn play(&mut self, ctx: &mut BTerm) {
@@ -53,24 +54,41 @@ impl State {
             self.frame_time = 0.0;
 
             self.player.gravity_and_move();
+            let last_gap_y = self.obstacles.last().unwrap().gap_y;
+            let mut random = RandomNumberGenerator::new();
+            let mut obstacle_center = cmp::min(
+                random.range(last_gap_y - 7, last_gap_y + 7),
+                SCREEN_HEIGHT - 20,
+            );
+            obstacle_center = cmp::max(obstacle_center, 20);
+
+            self.obstacles.push(Obstacle::new(
+                self.player.x + SCREEN_WIDTH,
+                obstacle_center,
+                self.score,
+            ));
         }
 
         if let Some(VirtualKeyCode::Space) = ctx.key {
             self.player.flap();
         }
         self.player.render(ctx);
+
+        if self.player.x > self.obstacles[0].x {
+            self.score += 0.01;
+            self.obstacles.remove(0);
+        }
+
+        for obstacle in self.obstacles.iter_mut() {
+            obstacle.render(ctx, self.player.x);
+
+            if self.player.y > SCREEN_HEIGHT || obstacle.hit_obstacle(&self.player) {
+                self.mode = GameMode::End;
+            }
+        }
+
         ctx.print(0, 0, "Press SPACE to flap.");
         ctx.print(0, 1, &format!("Score: {}", self.score));
-
-        self.obstacle.render(ctx, self.player.x);
-        if self.player.x > self.obstacle.x {
-            self.score += 1;
-            self.obstacle = Obstacle::new(self.player.x + SCREEN_WIDTH, self.score);
-        }
-
-        if self.player.y > SCREEN_HEIGHT || self.obstacle.hit_obstacle(&self.player) {
-            self.mode = GameMode::End;
-        }
     }
 
     fn dead(&mut self, ctx: &mut BTerm) {
@@ -149,12 +167,13 @@ struct Obstacle {
 }
 
 impl Obstacle {
-    fn new(x: i32, score: i32) -> Self {
+    fn new(x: i32, last_gap: i32, score: f32) -> Self {
         let mut random = RandomNumberGenerator::new();
+        let center = random.range(last_gap - 5, last_gap + 5);
         Obstacle {
             x,
-            gap_y: random.range(10, 40),
-            size: i32::max(2, 20 - score),
+            gap_y: center,
+            size: i32::max(5, 30 - (score as i32)),
         }
     }
 
