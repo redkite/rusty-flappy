@@ -141,7 +141,15 @@ impl Player {
     }
 
     fn render(&mut self, ctx: &mut BTerm) {
-        ctx.set(0, self.y, YELLOW, BLACK, to_cp437('@'));
+        ctx.set_active_console(1);
+        ctx.cls();
+        ctx.add_sprite(
+            Rect::with_size(0, self.y * 8, 8, 8),
+            400 - self.y,
+            RGBA::from_f32(1.0, 1.0, 1.0, 1.0),
+            0,
+        );
+        ctx.set_active_console(0);
     }
 
     fn gravity_and_move(&mut self) {
@@ -205,6 +213,10 @@ impl Obstacle {
 fn main() -> BError {
     let context = BTermBuilder::simple80x50()
         .with_title("Flappy Dragon")
+        .with_sprite_console(640, 400, 0)
+        .with_sprite_sheet(
+            SpriteSheet::new("resources/dragon-1.png").add_sprite(Rect::with_size(0, 0, 939, 678)),
+        )
         .build()?;
 
     main_loop(context, State::new())
